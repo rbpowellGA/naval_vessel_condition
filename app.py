@@ -1,28 +1,20 @@
 import streamlit as st
 import pandas as pd
-from sklearn.linear_model import Ridge
+import joblib
 import numpy as np
+from sklearn.linear_model import Ridge
 
-# Load data
-data = pd.read_csv('data/data.csv')  # Ensure correct path
+# Load the pre-trained model
+model = joblib.load('models/ridge_model.joblib')
 
-num_bins = 9
-
-bin_edges = np.linspace(data['LeverPosition'].min(), data['LeverPosition'].max(), num_bins + 1)
-
-data['LeverPosition_bin'] = pd.cut(data['LeverPosition'], bins=bin_edges, labels=False, include_lowest=True)
-
-
-data["avg_prop_torque[kN]"] = ((data['StarboardPropellerTorque(Ts)[kN]'] + data['PortPropellerTorque(Tp)[kN]']) / 2)
-
-# Updated features list
+# Features list
 features = ['LeverPosition_bin', 'GasTurbineShaftTorque[kNm]', 'GT_rateofrevolutions(GTn)[rpm]',
              'GasGeneratorRateofRevolutions(GGn)[rpm]', 'avg_prop_torque[kN]', 
              'HightPressure(HP)TurbineExitTemperature(T48)[C]', 'GTCompressorOutletAirTemperature(T2)[C]',
              'HPTurbineExitPressure(P48)[bar]', 'GTCompressorOutletAirPressure(P2)[bar]',
              'GTExhaustGasPressure(Pexh)[bar]', 'FuelFlow(mf)[kg/s]']
 
-# Updated min and max values for sliders
+# Slider min and max values
 slider_min_max = {
     'LeverPosition_bin': (0.0, 10.0),
     'GasTurbineShaftTorque[kNm]': (250.0, 73000.0),
@@ -37,7 +29,7 @@ slider_min_max = {
     'FuelFlow(mf)[kg/s]': (0.05, 2.0)
 }
 
-# Step sizes for sliders (ensuring they are floats)
+# Slider step sizes
 slider_step = {
     'LeverPosition_bin': 1.0,
     'GasTurbineShaftTorque[kNm]': 1.0,
@@ -64,21 +56,13 @@ def app():
         input_features = {feature: st.slider(feature, min_value=slider_min_max[feature][0], max_value=slider_min_max[feature][1], value=slider_min_max[feature][0], step=slider_step[feature]) for feature in features}
         
         if st.button("Predict"):
-            if data is not None:
-                try:
-                    X = data[features]
-                    y = data['GTTurbineDecayStateCoefficient']
-                    model = Ridge(alpha=100)
-                    model.fit(X, y)
-                    
-                    # Predict based on input
-                    input_df = pd.DataFrame([input_features], columns=features)
-                    prediction = model.predict(input_df)
-                    st.write(f"Predicted GTTurbineDecayStateCoefficient: {prediction[0]}")
-                except Exception as e:
-                    st.error(f"An error occurred: {e}")
-            else:
-                st.error("Data is not loaded properly.")
+            try:
+                # Predict based on input
+                input_df = pd.DataFrame([input_features], columns=features)
+                prediction = model.predict(input_df)
+                st.write(f"Predicted GTTurbineDecayStateCoefficient: {prediction[0]}")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
 
     elif page == "Feature Selection":
         st.title("Feature Selection Page")
@@ -89,26 +73,35 @@ def app():
         if selected_target:
             st.write("Preparing model...")
             # Show progress
-            st.spinner("Training model...")
-            
-            # Prepare model using original data
-            remaining_features = [f for f in features if f != selected_target]
-            X = data[remaining_features]
-            y = data[selected_target]
-            model = Ridge(alpha=100)
-            model.fit(X, y)
-            
-            # Input fields for prediction
-            st.write(f"Input values for features to predict {selected_target}:")
-            input_features = {feature: st.slider(feature, min_value=slider_min_max[feature][0], max_value=slider_min_max[feature][1], value=slider_min_max[feature][0], step=slider_step[feature]) for feature in remaining_features}
-            
-            if st.button("Predict"):
-                try:
-                    input_df = pd.DataFrame([input_features], columns=remaining_features)
-                    prediction = model.predict(input_df)
-                    st.write(f"Predicted {selected_target}: {prediction[0]}")
-                except Exception as e:
-                    st.error(f"An error occurred: {e}")
+            with st.spinner("Training model..."):
+                # Prepare model using original data
+                remaining_features = [f for f in features if f != selected_target]
+                
+                # Load the data for fitting the new model
+                data = pd.read_csv('data/data.csv')  # Ensure correct path
+                
+                num_bins = 9
+                bin_edges = np.linspace(data['LeverPosition'].min(), data['LeverPosition'].max(), num_bins + 1)
+                data['LeverPosition_bin'] = pd.cut(data['LeverPosition'], bins=bin_edges, labels=False, include_lowest=True)
+                data["avg_prop_torque[kN]"] = ((data['StarboardPropellerTorque(Ts)[kN]'] + data['PortPropellerTorque(Tp)[kN]']) / 2)
+                
+                # Prepare new model
+                X = data[remaining_features]
+                y = data[selected_target]
+                new_model = Ridge(alpha=100)
+                new_model.fit(X, y)
+                
+                # Input fields for prediction
+                st.write(f"Input values for features to predict {selected_target}:")
+                input_features = {feature: st.slider(feature, min_value=slider_min_max[feature][0], max_value=slider_min_max[feature][1], value=slider_min_max[feature][0], step=slider_step[feature]) for feature in remaining_features}
+                
+                if st.button("Predict"):
+                    try:
+                        input_df = pd.DataFrame([input_features], columns=remaining_features)
+                        prediction = new_model.predict(input_df)
+                        st.write(f"Predicted {selected_target}: {prediction[0]}")
+                    except Exception as e:
+                        st.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     app()
