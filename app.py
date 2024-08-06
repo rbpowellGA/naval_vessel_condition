@@ -71,14 +71,13 @@ def app():
         selected_target = st.selectbox("Select New Target Feature", features)
         
         if selected_target:
-            st.write("Preparing model...")
-            # Show progress
+            
             with st.spinner("Training model..."):
                 # Prepare model using original data
                 remaining_features = [f for f in features if f != selected_target]
                 
                 # Load the data for fitting the new model
-                data = pd.read_csv('data/data.csv')  # Ensure correct path
+                data = pd.read_csv('data/data.csv') 
                 
                 num_bins = 9
                 bin_edges = np.linspace(data['LeverPosition'].min(), data['LeverPosition'].max(), num_bins + 1)
@@ -91,7 +90,7 @@ def app():
                 new_model = Ridge(alpha=100)
                 new_model.fit(X, y)
                 
-                # Input fields for prediction
+                # Input for prediction
                 st.write(f"Input values for features to predict {selected_target}:")
                 input_features = {feature: st.slider(feature, min_value=slider_min_max[feature][0], max_value=slider_min_max[feature][1], value=slider_min_max[feature][0], step=slider_step[feature]) for feature in remaining_features}
                 
