@@ -4,7 +4,7 @@ from sklearn.linear_model import Ridge
 import numpy as np
 
 # Load data
-data = pd.read_csv('data/data.csv')  # Ensure correct path
+data = pd.read_csv('data/data.csv')
 
 num_bins = 9
 
@@ -37,7 +37,7 @@ slider_min_max = {
     'FuelFlow(mf)[kg/s]': (0.05, 2.0)
 }
 
-# Step sizes for sliders (ensuring they are floats)
+# Step sizes for sliders (floats)
 slider_step = {
     'LeverPosition_bin': 1.0,
     'GasTurbineShaftTorque[kNm]': 1.0,

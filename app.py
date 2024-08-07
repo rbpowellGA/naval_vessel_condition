@@ -46,9 +46,9 @@ slider_step = {
 
 def app():
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["Prediction", "Feature Selection"])
+    page = st.sidebar.radio("Go to", ["Turbine Coef Prediction", "Create Your Own Prediction"])
 
-    if page == "Prediction":
+    if page == "Turbine Coef Prediction":
         st.title("Turbine Decay Coefficient Predictor")
         st.write("Input feature values to predict the target value.")
 
@@ -64,8 +64,8 @@ def app():
             except Exception as e:
                 st.error(f"An error occurred: {e}")
 
-    elif page == "Feature Selection":
-        st.title("Feature Selection Page")
+    elif page == "Create Your Own Prediction":
+        st.title("Create Your Own Prediction Page")
         st.write("Select a feature to be the new target. Remaining features will be used to predict this new target.")
 
         selected_target = st.selectbox("Select New Target Feature", features)
