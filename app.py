@@ -50,7 +50,6 @@ def app():
 
     if page == "Turbine Coef Prediction":
         st.title("Turbine Decay Coefficient Predictor")
-        st.write("Input feature values to predict the target value.")
 
         # Input fields for prediction using sliders
         input_features = {feature: st.slider(feature, min_value=slider_min_max[feature][0], max_value=slider_min_max[feature][1], value=slider_min_max[feature][0], step=slider_step[feature]) for feature in features}
@@ -66,7 +65,7 @@ def app():
 
     elif page == "Create Your Own Prediction":
         st.title("Create Your Own Prediction Page")
-        st.write("Select a feature to be the new target. Remaining features will be used to predict this new target.")
+        st.write("Select a feature to be the new target. Remaining features will be used to predict the new target.")
 
         selected_target = st.selectbox("Select New Target Feature", features)
         
